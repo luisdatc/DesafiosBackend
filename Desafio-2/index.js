@@ -36,7 +36,7 @@ const productoNuevo4 = new Product(
   3
 );
 
-/* pManager.addProduct(productoNuevo1); */
+pManager.addProduct(productoNuevo1);
 /* pManager.addProduct(productoNuevo2); */
 /* pManager.addProduct(productoNuevo3); */
 /*  pManager.addProduct(productoNuevo4);   */
@@ -60,8 +60,8 @@ const updatedFields = {
 const updatedProduct = pManager.updateProduct(productIdToUpdate, updatedFields);
 console.log("Producto actualizado:", updatedProduct); */
 
-// Eliminar producto
+/* // Eliminar producto
 const productIdToDelete = 1; // Reemplaza con el ID del producto que quieras eliminar
 const remainingProducts = pManager.deleteProduct(productIdToDelete);
-console.log("Productos restantes:", remainingProducts);
+console.log("Productos restantes:", remainingProducts); */
  

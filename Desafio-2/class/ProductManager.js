@@ -4,14 +4,14 @@ const path = "./productos.json";
 
 export default class ProductManager {
   constructor() {
-    this.initProductId();
+    this.inicioProductId();
   }
 
-  async initProductId() {
+  async inicioProductId() {
     const data = JSON.parse(await fs.readFile(path, "utf-8"));
     if (data.length > 0) {
-      const lastProduct = data[data.length - 1];
-      this.productId = lastProduct.id + 1;
+      const ultimoProduct = data[data.length - 1];
+      this.productId = ultimoProduct.id + 1;
     } else {
       this.productId = 1; // In case there are no products yet
     }
