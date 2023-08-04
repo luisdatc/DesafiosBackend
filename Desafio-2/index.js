@@ -19,7 +19,7 @@ const productoNuevo2 = new Product(
   "AS001",
   3
 );
-/* const productoNuevo3 = new Product(
+const productoNuevo3 = new Product(
   "X-Men",
   "X-mens",
   8.99,
@@ -34,23 +34,23 @@ const productoNuevo4 = new Product(
   "/ruta-imagen2.jpg",
   "DP001",
   3
-); */
+);
 
-pManager.addProduct(productoNuevo1);
-pManager.addProduct(productoNuevo2);
-/* pManager.addProduct(productoNuevo3);
-pManager.addProduct(productoNuevo4); */
+/* pManager.addProduct(productoNuevo1); */
+/* pManager.addProduct(productoNuevo2); */
+/* pManager.addProduct(productoNuevo3); */
+/*  pManager.addProduct(productoNuevo4);   */
 
 // obtener todos los productos
-const allProducts = pManager.getProducts();
-console.log("Todos los productos:", allProducts);
+/* const allProducts = pManager.getProducts();
+console.log("Todos los productos:", allProducts); */
 
-// buscar producto por id
+/* // buscar producto por id
 const productIdToFind = 1; // Reemplaza con el ID del producto que quieras buscar
 const foundProduct = pManager.getProductById(productIdToFind);
-console.log("Producto encontrado:", foundProduct);
+console.log("Producto encontrado:", foundProduct);*/
 
-// actualizar prodcuto
+/* // actualizar prodcuto
 const productIdToUpdate = 2; // Reemplaza con el ID del producto que quieras actualizar
 const updatedFields = {
   title: "Avengers",
@@ -58,9 +58,10 @@ const updatedFields = {
   stock: 10,
 };
 const updatedProduct = pManager.updateProduct(productIdToUpdate, updatedFields);
-console.log("Producto actualizado:", updatedProduct);
+console.log("Producto actualizado:", updatedProduct); */
 
 // Eliminar producto
 const productIdToDelete = 1; // Reemplaza con el ID del producto que quieras eliminar
 const remainingProducts = pManager.deleteProduct(productIdToDelete);
 console.log("Productos restantes:", remainingProducts);
+ 
