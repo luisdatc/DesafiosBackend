@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "title": "Ultimate Spiderman",
+    "description": "Comic Ultimate Spiderman",
+    "price": 5.99,
+    "thumbnail": "/ruta-imagen1.jpg",
+    "code": "USM01",
+    "stock": 5
+  }
+]
