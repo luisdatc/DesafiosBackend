@@ -58,6 +58,16 @@ io.on("connection", (socket) => {
         console.error("Error al agregar el producto en tiempo real:", error);
       });
   });
+
+
+  socket.on("solicitarProductos", async () => {
+    try {
+      const products = await productManager.getProducts();
+      socket.emit("productosMostrados", products);
+    } catch (error) {
+      console.error("Error al obtener la lista de productos:", error);
+    }
+  });
 });
 
 //Rutas
