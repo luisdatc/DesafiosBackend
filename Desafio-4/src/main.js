@@ -50,7 +50,7 @@ io.on("connection", (socket) => {
 
   socket.on("nuevoProductoRealTime", (product) => {
     productManager
-      .addRealTimeProduct(product)
+      .addProduct(product)
       .then((newProduct) => {
         io.emit("productoAgregadoRealTime", newProduct);
       })

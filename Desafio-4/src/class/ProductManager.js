@@ -107,10 +107,4 @@ export default class ProductManager {
     return filteredProducts;
   }
 
-  async addRealTimeProduct(product) {
-    const data = JSON.parse(await fs.readFile(path, "utf-8"));
-    data.push(product);
-    await fs.writeFile(this.path, JSON.stringify(data));
-    return product;
-  }
 }
