@@ -21,7 +21,7 @@ const serverExpress = app.listen(PORT, () => {
 //Conexion a la Base de Datos
 mongoose
   .connect(
-    "mongodb+srv://luisct91:21210ldtc@cluster0.kvfp5k9.mongodb.net/?retryWrites=true&w=majority"
+    "mongodb+srv://luisct91:password@cluster0.kvfp5k9.mongodb.net/?retryWrites=true&w=majority"
   )
   .then(() => console.log("DB Conectada"))
   .catch(() => console.log("Error en conexion a BDD"));
