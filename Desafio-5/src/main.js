@@ -81,7 +81,7 @@ app.use("api/messages", messageRouter);
 // Ruta para la vista home.handlebars
 app.get("/static", async (req, res) => {
   try {
-    const products = await productModel.find();
+    const products = await productModel.find().json.parse;
     res.render("home", {
       css: "style.css",
       title: "Home",
