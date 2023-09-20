@@ -31,6 +31,7 @@ mongoose
 //MIDDLEWARE
 app.use(express.json());
 app.use(cookieParser(process.env.SIGNED_COOKIE)); //la cookie esta firmada
+
 app.use(
   session({
     store: MongoStore.create({
@@ -48,24 +49,23 @@ app.use(
 );
 
 //verifico si el usuario es administrador o no
-/* const auth = (req, res, next) => {
-  if (
-    req.session.email == "admin@gmail.com" &&
-    req.session.password == "1234"
-  ) {
-    return next(); //continua con la siguiente ejecucion
+const auth = (req, res, next) => {
+  if (req.session.login === true) {
+    next(); // Continuar con la siguiente ejecución
+  } else {
+    res.redirect("/api/sessions/login");
   }
-  return res.send("No tenes acceso a esta ruta");
-}; */
+};
 
 app.use(express.urlencoded({ extended: true }));
+
 app.engine("handlebars", engine()); //defino el motor de plantillas a usar y la config
 app.set("view engine", "handlebars"); //setting de mi app de handlebars
 app.set("views", path.resolve(__dirname, "./views")); //resuelve rutas absolutas a travez de rutas relativas
 app.use("/static", express.static(path.join(__dirname, "/public")));
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.login === true; // Define una variable local en res.locals
-  next(); 
+  next();
 });
 
 // Server Socket.io
@@ -139,7 +139,7 @@ app.get("/admin", auth, (req, res) => {
 }); */
 
 // RUTA POARA LA VISTA HOME.HANDLEBARS
-app.get("/static", async (req, res) => {
+app.get("/static", auth, async (req, res) => {
   try {
     const products = await productModel.find();
     res.render("home", {
@@ -156,11 +156,10 @@ app.get("/static", async (req, res) => {
     });
   } catch (error) {
     console.error("Error al obtener los productos:", error);
-    res.status(500).send("Error interno del servidor");
   }
 });
 
-app.get("/static/realtimeproducts", (req, res) => {
+app.get("/static/realtimeproducts", auth, (req, res) => {
   res.render("realTimeProducts", {
     css: "form.css",
     js: "realTimeProducts.js",
@@ -176,3 +175,10 @@ sessionRouter.get("/login", (req, res) => {
   });
 });
 
+app.get("/registro", (req, res) => {
+  res.render("registro", {
+    css: "form.css",
+    js: "script.js",
+    title: "Registro",
+  });
+});

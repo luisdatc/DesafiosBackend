@@ -21,12 +21,10 @@ userRouter.get("/:id", async (req, res) => {
     if (user) {
       res.status(200).send({ respuesta: "OK", mensaje: user });
     } else {
-      res
-        .status(404)
-        .send({
-          respuesta: "Error en consultar usuario",
-          mensaje: "User not Found",
-        });
+      res.status(404).send({
+        respuesta: "Error en consultar usuario",
+        mensaje: "User not Found",
+      });
     }
   } catch (error) {
     res
@@ -68,12 +66,10 @@ userRouter.put("/:id", async (req, res) => {
     if (user) {
       res.status(200).send({ respuesta: "OK", mensaje: user });
     } else {
-      res
-        .status(404)
-        .send({
-          respuesta: "Error en actualizar usuario",
-          mensaje: "User not Found",
-        });
+      res.status(404).send({
+        respuesta: "Error en actualizar usuario",
+        mensaje: "User not Found",
+      });
     }
   } catch (error) {
     res
@@ -89,17 +85,45 @@ userRouter.delete("/:id", async (req, res) => {
     if (user) {
       res.status(200).send({ respuesta: "OK", mensaje: user });
     } else {
-      res
-        .status(404)
-        .send({
-          respuesta: "Error en eliminar usuario",
-          mensaje: "User not Found",
-        });
+      res.status(404).send({
+        respuesta: "Error en eliminar usuario",
+        mensaje: "User not Found",
+      });
     }
   } catch (error) {
     res
       .status(400)
       .send({ respuesta: "Error en eliminar usuario", mensaje: error });
+  }
+});
+
+userRouter.post("/registro", async (req, res) => {
+  const { first_name, last_name, age, email, password } = req.body;
+
+  try {
+    //verifico si existe el usuario en la base de datos por el correo
+    const existingUser = await userModel.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).send("El usuario ya existe");
+    }
+
+    //modelo para crear el usuario
+    const newUser = new userModel({
+      first_name,
+      last_name,
+      age,
+      email,
+      password,
+    });
+
+    // guardo el usuario nuevo en mongodb
+    await newUser.save();
+
+    res.redirect("/api/sessions/login");
+  } catch (error) {
+    console.error("Error en el registro:", error);
+    res.status(500).send("Error interno del servidor");
   }
 });
 

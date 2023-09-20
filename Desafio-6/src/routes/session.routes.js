@@ -8,7 +8,9 @@ sessionRouter.post("/login", async (req, res) => {
   try {
     if (req.session.login) {
       res.redirect("/static");
+      return;
     }
+
     const user = await userModel.findOne({ email: email });
 
     if (user) {
@@ -17,17 +19,19 @@ sessionRouter.post("/login", async (req, res) => {
         req.session.email = email;
         res.redirect("/static");
       } else {
-        req.session.error = "Credenciales Invalidas";
-        console.log("Credenciales Invalidas");
+        req.session.error = "Credenciales Inválidas";
+        console.log("Credenciales Inválidas");
+        res.redirect("/api/sessions/login");
       }
     } else {
-      req.session.error = "Credenciales Invalidas";
-      console.log("Credenciales Invalidas");
+      req.session.error = "Credenciales Inválidas";
+      console.log("Credenciales Inválidas");
+      res.redirect("/api/sessions/login");
     }
-    res.redirect("/api/sessions/login");
   } catch (error) {
     console.error("Error en login:", error);
     req.session.error = "Credenciales Inválidas";
+    res.redirect("/api/sessions/login");
   }
 });
 
@@ -44,7 +48,6 @@ sessionRouter.post("/logout", (req, res) => {
       });
     });
   } else {
-
     res.redirect("/api/sessions/login");
   }
 });
