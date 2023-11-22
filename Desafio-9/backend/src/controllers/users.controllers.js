@@ -1,4 +1,5 @@
 import { userModel } from "../models/users.models.js";
+import { generateUserError } from "../services/errors/info.js";
 
 export const getUsers = async (req, res) => {
   try {
@@ -7,9 +8,11 @@ export const getUsers = async (req, res) => {
     if (user) {
       return res.status(200).send(user);
     }
-    res.status(400).send({ error: "Usuario no encontrado" });
+    res.status(404).send(generateUserError({}));
   } catch (error) {
-    res.status(500).send({ error: `Error en consultar el usuario ${error}` });
+    res.status(500).send({
+      error: generateDatabaseError(`Error en consultar el usuario ${error}`),
+    });
   }
 };
 
@@ -22,19 +25,31 @@ export const getUserbyId = async (req, res) => {
     if (userId) {
       return res.status(200).send(userId);
     }
-    res.status(404).send({ error: "Usuario no encontrado" });
+    res.status(404).send({
+      error: CustomError.createError({
+        name: "NotFoundError",
+        message: "Usuario no encontrado",
+        code: EError.NOT_FOUND_ERROR,
+      }),
+    });
   } catch (error) {
-    res.status(500).send({ error: `Error en consultar usuario ${error}` });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en consultar usuario: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
-
 
 export const putUser = async (req, res) => {
   const { id } = req.params;
   const { first_name, last_name, age, email, password } = req.body;
 
   try {
-    const actUser = await userModel.findByIdAndUpdate(id, {
+    const updatedUser = await userModel.findByIdAndUpdate(id, {
       first_name,
       last_name,
       age,
@@ -42,25 +57,51 @@ export const putUser = async (req, res) => {
       password,
     });
 
-    if (actUser) {
-      return res.status(200).send(actUser);
+    if (updatedUser) {
+      return res.status(200).send(updatedUser);
     }
-    res.status(404).send({ error: "Usuario no encontrado" });
+    res.status(404).send({
+      error: CustomError.createError({
+        name: "NotFoundError",
+        message: "Usuario no encontrado",
+        code: EError.NOT_FOUND_ERROR,
+      }),
+    });
   } catch (error) {
-    res.status(500).send({ error: `Error en actualizar el usuario ${error}` });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en actualizar el usuario: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
 export const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await userModel.findByIdAndDelete(id);
-    if (user) {
-      res.status(200).send({ user });
+    const deletedUser = await userModel.findByIdAndDelete(id);
+    if (deletedUser) {
+      res.status(200).send({ user: deletedUser });
     } else {
-      res.status(404).send({ error: "Error en eliminar usuario" });
+      res.status(404).send({
+        error: CustomError.createError({
+          name: "NotFoundError",
+          message: "Usuario no encontrado",
+          code: EError.NOT_FOUND_ERROR,
+        }),
+      });
     }
   } catch (error) {
-    res.status(400).send({ error: "Error en eliminar usuario" });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en eliminar usuario: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };

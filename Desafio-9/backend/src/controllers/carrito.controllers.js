@@ -1,6 +1,13 @@
 import { cartModel } from "../models/cart.models.js";
 import { productModel } from "../models/products.models.js";
 import { ticketModel } from "../models/ticket.models.js";
+import EError from "../services/errors/enum.js";
+import {
+  generateCartError,
+  generateDatabaseError,
+
+} from "../services/errors/info.js";
+import CustomError from "../services/errors/CustomError.js";
 
 export const getCarrito = async (req, res) => {
   const { limit } = req.query;
@@ -8,7 +15,14 @@ export const getCarrito = async (req, res) => {
     const carts = await cartModel.find().limit(limit);
     res.status(200).send({ respuesta: "ok", mensaje: carts });
   } catch (error) {
-    res.status(400).send({ respuesta: "Error", mensaje: error });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en consultar carritos: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
@@ -22,14 +36,22 @@ export const getCarritoById = async (req, res) => {
       res.status(200).send({ respuesta: "OK", mensaje: cart });
     } else {
       res.status(404).send({
-        respuesta: "Error en consultar el carrito",
-        mensaje: "Not Found",
+        error: CustomError.createError({
+          name: "NotFoundError",
+          message: "Carrito no encontrado",
+          code: EError.NOT_FOUND_ERROR,
+        }),
       });
     }
   } catch (error) {
-    res
-      .status(400)
-      .send({ respuesta: "Error en consultar el carrito", mensaje: error });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en consultar el carrito: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
@@ -38,9 +60,14 @@ export const postCarrito = async (req, res) => {
     const cart = await cartModel.create({});
     res.status(200).send({ respuesta: "OK", mensaje: cart });
   } catch (error) {
-    res
-      .status(400)
-      .send({ respuesta: "Error en crear el carrito", mensaje: error });
+    res.status(400).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en crear el carrito: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
@@ -52,18 +79,20 @@ export const postCarritoByProductId = async (req, res) => {
     const cart = await cartModel.findById(cid);
 
     if (!cart) {
-      res.status(404).json({
-        respuesta: "Error al agregar producto al carrito",
-        mensaje: "Carrito no encontrado",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateCartError(cid),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
     const product = await productModel.findById(pid);
 
     if (!product) {
-      res.status(404).send({
-        respuesta: "Error al agregar producto al carrito",
-        mensaje: "Producto no encontrado",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateProductNotFoundError(pid),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
@@ -84,10 +113,21 @@ export const postCarritoByProductId = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({
-      respuesta: "Error",
-      mensaje: "Ha ocurrido un error en el servidor",
-    });
+
+    if (error instanceof CustomError) {
+      res.status(404).send({
+        error: error,
+      });
+    } else {
+      res.status(500).send({
+        error: CustomError.createError({
+          name: "ServerError",
+          message: `Ha ocurrido un error en el servidor: ${error.message}`,
+          code: EError.INTERNAL_SERVER_ERROR,
+          cause: error,
+        }),
+      });
+    }
   }
 };
 
@@ -98,9 +138,10 @@ export const deleteById = async (req, res) => {
     const cart = await cartModel.findById(id);
 
     if (!cart) {
-      res.status(404).send({
-        respuesta: "Error al agregar producto al carrito",
-        mensaje: "Carrito no encontrado",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateCartError(id),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
@@ -113,14 +154,26 @@ export const deleteById = async (req, res) => {
       carrito: cart,
     });
   } catch (error) {
-    res.status(500).send({
-      respuesta: "Error",
-      mensaje: "Ha ocurrido un error en el servidor",
-    });
+    console.error(error);
+
+    if (error instanceof CustomError) {
+      res.status(404).send({
+        error: error,
+      });
+    } else {
+      res.status(500).send({
+        error: CustomError.createError({
+          name: "ServerError",
+          message: `Ha ocurrido un error en el servidor: ${error.message}`,
+          code: EError.INTERNAL_SERVER_ERROR,
+          cause: error,
+        }),
+      });
+    }
   }
 };
 
-export const putCarritoByProducId = async (reque, res) => {
+export const putCarritoByProducId = async (req, res) => {
   try {
     const { cid, pid } = req.params;
     const { quantity } = req.body;
@@ -128,18 +181,20 @@ export const putCarritoByProducId = async (reque, res) => {
     const cart = await cartModel.findById(cid);
 
     if (!cart) {
-      res.status(404).send({
-        respuesta: "Carrito no encontrado",
-        mensaje: "Not Found",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateCartError(cid),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
     const product = await productModel.findById(pid);
 
     if (!product) {
-      res.status(404).send({
-        respuesta: "Producto no encontrado",
-        mensaje: "Not Found",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateProductNotFoundError(pid),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
@@ -162,10 +217,21 @@ export const putCarritoByProducId = async (reque, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({
-      respuesta: "Error",
-      mensaje: "Ha ocurrido un error en el servidor",
-    });
+
+    if (error instanceof CustomError) {
+      res.status(404).send({
+        error: error,
+      });
+    } else {
+      res.status(500).send({
+        error: CustomError.createError({
+          name: "ServerError",
+          message: `Ha ocurrido un error en el servidor: ${error.message}`,
+          code: EError.INTERNAL_SERVER_ERROR,
+          cause: error,
+        }),
+      });
+    }
   }
 };
 
@@ -173,19 +239,21 @@ export const deleteProductById = async (req, res) => {
   const { cid, pid } = req.params;
 
   try {
-    const cart = await this.findById(cid);
+    const cart = await cartModel.findById(cid);
     if (!cart) {
-      res.status(404).send({
-        respuesta: "Carrito no encontrado",
-        mensaje: "Not Found",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateCartError(cid),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
     const product = await productModel.findById(pid);
     if (!product) {
-      res.status(404).send({
-        respuesta: "Producto no encontrado",
-        mensaje: "Not Found",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateProductNotFoundError(pid),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
@@ -195,9 +263,10 @@ export const deleteProductById = async (req, res) => {
     if (index !== -1) {
       cart.products.splice(index, 1);
     } else {
-      res.status(404).send({
-        respuesta: "Producto no encontrado en carrito",
-        mensaje: "Not Found",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateProductNotFoundError(pid),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
@@ -205,9 +274,22 @@ export const deleteProductById = async (req, res) => {
 
     res.status(200).send({ respuesta: "OK", mensaje: "Product removed" });
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 400)
-      .send({ respuesta: "Error", mensaje: error.message });
+    console.error(error);
+
+    if (error instanceof CustomError) {
+      res.status(404).send({
+        error: error,
+      });
+    } else {
+      res.status(500).send({
+        error: CustomError.createError({
+          name: "ServerError",
+          message: `Ha ocurrido un error en el servidor: ${error.message}`,
+          code: EError.INTERNAL_SERVER_ERROR,
+          cause: error,
+        }),
+      });
+    }
   }
 };
 
@@ -219,16 +301,20 @@ export const putCarrito = async (req, res) => {
     const cart = await cartModel.findById(cid);
 
     if (!cart) {
-      return res.status(404).json({
-        respuesta: "Error",
-        mensaje: "Carrito no encontrado",
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateDatabaseError(`Carrito con ID ${cid} no encontrado`),
+        code: EError.NOT_FOUND_ERROR,
       });
     }
 
     if (!Array.isArray(productsArray)) {
-      return res.status(400).json({
-        respuesta: "Error",
-        mensaje: "Los productos deben estar en un arreglo",
+      throw CustomError.createError({
+        name: "BadRequestError",
+        message: generateDatabaseError(
+          "Los productos deben estar en un arreglo"
+        ),
+        code: EError.BAD_REQUEST_ERROR,
       });
     }
 
@@ -238,9 +324,10 @@ export const putCarrito = async (req, res) => {
       const product = await productModel.findById(prod.id_prod);
 
       if (!product) {
-        return res.status(404).json({
-          respuesta: "Error",
-          mensaje: `Producto con ID ${prod.id_prod} no encontrado`,
+        throw CustomError.createError({
+          name: "NotFoundError",
+          message: generateProductNotFoundError(prod.id_prod),
+          code: EError.NOT_FOUND_ERROR,
         });
       }
 
@@ -272,10 +359,21 @@ export const putCarrito = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      respuesta: "Error",
-      mensaje: "Ha ocurrido un error en el servidor",
-    });
+
+    if (error instanceof CustomError) {
+      res.status(404).json({
+        error: error,
+      });
+    } else {
+      res.status(500).json({
+        error: CustomError.createError({
+          name: "ServerError",
+          message: `Ha ocurrido un error en el servidor: ${error.message}`,
+          code: EError.INTERNAL_SERVER_ERROR,
+          cause: error,
+        }),
+      });
+    }
   }
 };
 
@@ -285,35 +383,35 @@ export const postCompra = async (req, res) => {
   try {
     const cart = await cartModel.findById(cartId).populate("items.product");
     if (!cart) {
-      return res.status(404).json({ message: "Carrito no encontrado" });
+      throw CustomError.createError({
+        name: "NotFoundError",
+        message: generateDatabaseError(`Carrito con ID ${cartId} no encontrado`),
+        code: EError.NOT_FOUND_ERROR,
+      });
     }
 
-    const productsNotProcessed = []; // aca se almacenan los productos que no se pudieron procesar
+    const productsNotProcessed = [];
 
     for (const item of cart.items) {
       const product = item.product;
       const requestedQuantity = item.quantity;
 
       if (product.stock >= requestedQuantity) {
-        // El producto tiene suficiente stock, restarlo
         product.stock -= requestedQuantity;
         await product.save();
       } else {
-        // si el producto no tiene suficiente stock se almacenan en los no procesados
         productsNotProcessed.push(product._id);
       }
     }
 
-    // se actualiza el carrito con los productos no procesados
     cart.items = cart.items.filter(
       (cartItem) => !productsNotProcessed.includes(cartItem.product._id)
     );
     await cart.save();
 
-    // se crea un ticket con los datos de la compra
     const ticket = new ticketModel({
-      amount: cart.total, // Supongo que el carrito tiene un campo total
-      purchaser: cart.userEmail, // O donde se almacena el correo del usuario
+      amount: cart.total,
+      purchaser: cart.userEmail,
     });
     await ticket.save();
 
@@ -323,6 +421,20 @@ export const postCompra = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Error al procesar la compra" });
+
+    if (error instanceof CustomError) {
+      res.status(404).json({
+        error: error,
+      });
+    } else {
+      res.status(500).json({
+        error: CustomError.createError({
+          name: "ServerError",
+          message: `Ha ocurrido un error en el servidor: ${error.message}`,
+          code: EError.INTERNAL_SERVER_ERROR,
+          cause: error,
+        }),
+      });
+    }
   }
 };

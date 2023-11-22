@@ -1,5 +1,5 @@
 import { productModel } from "../models/products.models.js";
-import { Types } from 'mongoose';
+import EError from "../services/errors/enum.js";
 
 export const getProducts = async (req, res) => {
   const { limit, page, filter, sort } = req.query;
@@ -9,18 +9,31 @@ export const getProducts = async (req, res) => {
   const ord = sort == "asc" ? 1 : -1;
 
   try {
-    const prods = await productModel.paginate(
+    const products = await productModel.paginate(
       { filter: filter },
       { limit: lim, page: pag, sort: { price: ord } }
     );
 
-    if (prods) {
-      return res.status(200).send(prods);
+    if (products.docs.length > 0) {
+      return res.status(200).send(products);
     }
 
-    res.status(404).send({ error: "Productos no encontrados" });
+    res.status(404).send({
+      error: CustomError.createError({
+        name: "NotFoundError",
+        message: "Productos no encontrados",
+        code: EError.NOT_FOUND_ERROR,
+      }),
+    });
   } catch (error) {
-    res.status(500).send({ error: `Error en consultar productos ${error}` });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en consultar productos: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
@@ -28,17 +41,28 @@ export const getProduct = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const prod = await productModel.findById(id);
-/*         const prod = await productModel.findById(Types.ObjectId(id)); */
-    
-    if (prod) {
-      console.log("Product found:", prod);
-      return res.status(200).send(prod);
+    const product = await productModel.findById(id);
+
+    if (product) {
+      return res.status(200).send(product);
     }
 
-    res.status(404).send({ error: "Producto no encontrado" });
+    res.status(404).send({
+      error: CustomError.createError({
+        name: "NotFoundError",
+        message: "Producto no encontrado",
+        code: EError.NOT_FOUND_ERROR,
+      }),
+    });
   } catch (error) {
-    res.status(500).send({ error: `Error en consultar producto ${error}` });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en consultar producto: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
@@ -46,7 +70,7 @@ export const postProduct = async (req, res) => {
   const { title, description, code, price, stock, category } = req.body;
 
   try {
-    const prod = await productModel.create({
+    const newProduct = await productModel.create({
       title,
       description,
       code,
@@ -55,19 +79,36 @@ export const postProduct = async (req, res) => {
       category,
     });
 
-    if (prod) {
-      return res.status(201).send(prod);
+    if (newProduct) {
+      return res.status(201).send(newProduct);
     }
 
-    res.status(400).send({ error: `Error en crear producto` });
+    res.status(400).send({
+      error: CustomError.createError({
+        name: "ValidationError",
+        message: "Error en crear producto",
+        code: EError.VALIDATION_ERROR,
+      }),
+    });
   } catch (error) {
     if (error.code == 11000) {
-      //error code es la llave duplicada
-      return res
-        .status(404)
-        .send({ error: "Producto ya creado con llave duplicada" });
+      // Código para clave duplicada
+      return res.status(400).send({
+        error: CustomError.createError({
+          name: "ValidationError",
+          message: "Producto ya creado con clave duplicada",
+          code: EError.VALIDATION_ERROR,
+        }),
+      });
     }
-    res.status(500).send({ error: `Error en consultar producto ${error}` });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en crear producto: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
@@ -76,7 +117,7 @@ export const putProduct = async (req, res) => {
   const { title, description, code, price, stock, category } = req.body;
 
   try {
-    const prod = await productModel.findByIdAndUpdate(id, {
+    const updatedProduct = await productModel.findByIdAndUpdate(id, {
       title,
       description,
       code,
@@ -85,13 +126,26 @@ export const putProduct = async (req, res) => {
       category,
     });
 
-    if (prod) {
-      return res.status(200).send(prod);
+    if (updatedProduct) {
+      return res.status(200).send(updatedProduct);
     }
 
-    res.status(404).send({ error: "Producto no encontrado" });
+    res.status(404).send({
+      error: CustomError.createError({
+        name: "NotFoundError",
+        message: "Producto no encontrado",
+        code: EError.NOT_FOUND_ERROR,
+      }),
+    });
   } catch (error) {
-    res.status(500).send({ error: `Error en actualizar el producto ${error}` });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en actualizar el producto: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
@@ -99,15 +153,28 @@ export const deleteProduct = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const prod = await productModel.findByIdAndDelete(id);
+    const deletedProduct = await productModel.findByIdAndDelete(id);
 
-    if (prod) {
-      return res.status(200).send(prod);
+    if (deletedProduct) {
+      return res.status(200).send(deletedProduct);
     }
 
-    res.status(404).send({ error: "Productono encontrado" });
+    res.status(404).send({
+      error: CustomError.createError({
+        name: "NotFoundError",
+        message: "Producto no encontrado",
+        code: EError.NOT_FOUND_ERROR,
+      }),
+    });
   } catch (error) {
-    res.status(500).send({ error: `Error en eliminar producto ${error}` });
+    res.status(500).send({
+      error: CustomError.createError({
+        name: "DatabaseError",
+        message: `Error en eliminar producto: ${error.message}`,
+        code: EError.DATABASE_ERROR,
+        cause: error,
+      }),
+    });
   }
 };
 
