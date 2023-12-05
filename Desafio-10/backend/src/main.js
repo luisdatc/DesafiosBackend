@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import router from "./routes/index.routes.js";
 import nodemailer from "nodemailer";
 import { __dirname } from "./path.js";
+import { addLogger } from "./utils/logger.js";
 
 const whiteList = ["http://127.0.0.1:5173", "http://localhost:5173"];
 
@@ -106,8 +107,6 @@ app.use((req, res, next) => {
 //Routes
 app.use("/", router);
 
-/* PARA VER LO REFERENTE AL FRONT VER EL AFTER DEL FRONTEND Y LA CLASE 15 SEGUNDA PARTE */
-
-const serverExpress = app.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server on port ${PORT}`);
 });
