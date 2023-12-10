@@ -136,3 +136,7 @@ export const sendPasswordResetEmail = async (userEmail) => {
 
   await transporter.sendMail(mailOptions);
 };
+
+export const getUserByEmail = async (email) => {
+  return userModel.findOne({ email });
+};

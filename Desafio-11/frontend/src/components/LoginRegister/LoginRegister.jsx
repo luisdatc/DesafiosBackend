@@ -6,6 +6,7 @@ import { LogContext } from "../LogContext";
 const LoginRegister = () => {
   const [isLoginFormVisible, setLoginFormVisible] = useState(true);
   const [loginData, setLoginData] = useState({ token: "" });
+
   // Función para alternar entre el formulario de inicio de sesión y registro
   const toggleForm = () => {
     setLoginFormVisible(!isLoginFormVisible);
@@ -72,6 +73,7 @@ const LoginRegister = () => {
         body: JSON.stringify(data),
       }
     );
+    console.log(response);
   };
 
   return (
@@ -157,9 +159,7 @@ const LoginRegister = () => {
                   Forgot password?
                 </button> */}
 
-                <Link to={`/reset-password/${loginData?.token || ""}`}>
-                  Restablecer contraseña
-                </Link>
+                <Link to="/reset-password-request">Olvidé mi contraseña</Link>
 
                 <input
                   type="submit"

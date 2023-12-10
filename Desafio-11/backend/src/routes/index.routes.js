@@ -4,6 +4,7 @@ import productosRouter from "./products.routes.js";
 import sessionRouter from "./session.routes.js";
 import userRouter from "./users.routes.js";
 import loggerRouter from "./logger.js";
+import resetPasswordRouter from "./resetPassword.routes.js";
 
 const router = Router();
 
@@ -13,5 +14,5 @@ router.use("/api/products", productosRouter);
 router.use("/api/carts", cartsRouter);
 router.use("/api/sessions", sessionRouter);
 router.use("/api/logger", loggerRouter);
-
+router.use("/api/reset-password", resetPasswordRouter);
 export default router;
