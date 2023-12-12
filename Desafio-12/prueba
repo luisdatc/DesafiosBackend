@@ -1,0 +1,254 @@
+hola, tengo un proyecto realizado con node, express y usando de base de datos mongodb. 
+el front lo estoy realizando en reactjs. 
+te adjuntare el codigo del back y del front. 
+te explico lo que quiero, desde el front en el componente login register quiero restablecer la contraseña de un usuario, en el componente resetpasswordRequest el usuario coloca el mail, si el mail existe en la base de datos le envia un correo al usuario a su mail con un link.
+el link me abre el componente resetPasswordPage donde hay dos inputs para colocar la contraseña nueva, al darle a enviar me dice error 404 en consola. sera porque necesito en el back necesito un metodo que me actualice la contraseña en la base de datos. 
+
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LoginRegister from "./components/LoginRegister/LoginRegister";
+import NewProduct from "./components/NewProduct/NewProduct";
+import NavBar from "./components/NavBar/NavBar";
+import Products from "./components/Products/Products";
+
+import "./App.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { LogProvider } from "./components/LogContext";
+import ProductDetail from "./components/ProductDetail/ProductDetail";
+import ShoppingBag from "./components/ShoppingBag/ShoppingBag";
+import Home from "./components/Home/Home";
+import ResetPasswordPage from "./components/ResetPasswordPage/ResetPasswordPage";
+import ResetPasswordRequest from "./components/ResetPasswordRequest/ResetPasswordRequest";
+import ResetPasswordConfirm from "./components/ResetPasswordConfirm/ResetPasswordConfirm";
+
+function App() {
+  return (
+    <LogProvider>
+      <BrowserRouter>
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/usuario" element={<LoginRegister />} />
+          <Route path="/new-product" element={<NewProduct />} />
+          <Route path="/productos" element={<Products />} />
+          <Route path="/productdetail/:id" element={<ProductDetail />} />
+          <Route path="/carrito" element={<ShoppingBag />} />
+          <Route
+            path="/reset-password-request"
+            element={<ResetPasswordRequest />}
+          />
+          <Route
+            path="/reset-password-confirm"
+            element={<ResetPasswordConfirm />}
+          />
+          <Route
+            path="/reset-password/:token"
+            element={<ResetPasswordPage />}
+          />
+        </Routes>
+      </BrowserRouter>
+    </LogProvider>
+  );
+}
+
+export default App;
+
+// ResetPasswordRequest.js
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const ResetPasswordRequest = () => {
+  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+
+  const handleRequestPasswordReset = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        // Solicitud enviada con éxito, redirigir al usuario al mensaje de confirmación
+        navigate("/reset-password-confirm");
+      } else {
+        // Manejar errores, por ejemplo, mostrar un mensaje de error al usuario
+        console.error(
+          "Error en la solicitud de restablecimiento de contraseña:",
+          response.statusText
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error en la solicitud de restablecimiento de contraseña:",
+        error
+      );
+    }
+  };
+
+  return (
+    <div>
+      <h2>Restablecer Contraseña</h2>
+      <p>Ingresa tu correo electrónico para restablecer la contraseña.</p>
+      <input
+        type="email"
+        placeholder="Correo Electrónico"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button onClick={handleRequestPasswordReset}>
+        Solicitar Restablecimiento
+      </button>
+    </div>
+  );
+};
+
+export default ResetPasswordRequest;
+
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+
+const ResetPasswordPage = () => {
+  const { token } = useParams();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleResetPassword = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/reset-password/${token}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-type": "application/json",
+          },
+          body: JSON.stringify({ newPassword, confirmPassword }),
+        }
+      );
+
+      if (response.status === 200) {
+        // Restablecimiento exitoso, puedes redirigir a la página de inicio de sesión u otra página
+        navigate("/usuario"); // Ajusta la ruta según tus necesidades
+      } else {
+        // Manejar errores, por ejemplo, mostrar un mensaje de error al usuario
+      }
+    } catch (error) {
+      console.error("Error al restablecer la contraseña:", error);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Restablecer Contraseña</h2>
+      <input
+        type="password"
+        placeholder="Nueva Contraseña"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Confirmar Contraseña"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+      />
+      <button onClick={handleResetPassword}>Restablecer Contraseña</button>
+    </div>
+  );
+};
+
+export default ResetPasswordPage;
+
+import crypto from "crypto";
+import { userModel } from "../models/users.models.js";
+import nodemailer from "nodemailer";
+
+export const resetPasswordPost = async (req, res) => {
+  
+    const transporter = nodemailer.createTransport({
+    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "correomcoc@gmail.com",
+      pass: process.env.PASSWORD_EMAIL,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  try {
+    const { email } = req.body;
+
+    // Buscar al usuario por correo electrónico
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Generar y guardar token de restablecimiento de contraseña
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hora de expiración
+    await user.save();
+
+    // Enviar correo electrónico con el enlace de restablecimiento
+    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+
+    const mailOptions = {
+      from: "tu_correo@gmail.com", // Reemplaza con tu dirección de correo electrónico
+      to: email,
+      subject: "Restablecimiento de Contraseña",
+      html: `<p>Haz clic en el siguiente enlace para restablecer tu contraseña: <a href="${resetLink}">Restablecer Contraseña</a></p>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({
+      message:
+        "Correo electrónico enviado con instrucciones para restablecer la contraseña",
+    });
+  } catch (error) {
+    console.error("Error al solicitar restablecimiento de contraseña:", error);
+    res
+      .status(500)
+      .json({ message: "Error interno del servidor", error: error.message });
+  }
+};
+
+import Router from "express";
+import { resetPasswordPost } from "../controllers/resetPassword.controller.js";
+
+const resetPasswordRouter = Router();
+
+resetPasswordRouter.post("/", resetPasswordPost);
+
+export default resetPasswordRouter;
+
+import { Router } from "express";
+import cartsRouter from "./carrito.routes.js";
+import productosRouter from "./products.routes.js";
+import sessionRouter from "./session.routes.js";
+import userRouter from "./users.routes.js";
+
+import resetPasswordRouter from "./resetPassword.routes.js";
+import loggerRouter from "./logger.routes.js";
+
+const router = Router();
+
+//Rutas de la app
+router.use("/api/users", userRouter);
+router.use("/api/products", productosRouter);
+router.use("/api/carts", cartsRouter);
+router.use("/api/sessions", sessionRouter);
+router.use("/api/logger", loggerRouter);
+router.use("/api/reset-password", resetPasswordRouter);
+export default router;
