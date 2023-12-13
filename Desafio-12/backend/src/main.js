@@ -12,6 +12,8 @@ import router from "./routes/index.routes.js";
 import nodemailer from "nodemailer";
 import { __dirname } from "./path.js";
 import { addLogger } from "./utils/logger.js";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUiExpress from "swagger-ui-express";
 
 const whiteList = ["http://127.0.0.1:5173", "http://localhost:5173"];
 
@@ -28,31 +30,6 @@ const corsOptions = {
 
 const app = express();
 const PORT = 8080;
-
-/*let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "correomcoc@gmail.com",
-    pass: process.env.PASSWORD_EMAIL,
-    authMethod: "LOGIN",
-  }  ,
-  tls: {
-    rejectUnauthorized: false, // Desactiva la verificación del certificado
-  }, 
-});*/
-
-/* app.get("/mail", async (req, res) => {
-  const resultadoEmail = await transporter.sendMail({
-    from: "TEST MAIL correomcoc@gmail.com",
-    to: "correomcoc@gmail.com",
-    subject: "Hola Prueba",
-    html: `<p>Hola esto es una prueba</p>`,
-  });
-  console.log(resultadoEmail);
-  res.send("Email enviado");
-}); */
 
 //Conexion a la Base de Datos
 mongoose
@@ -89,13 +66,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //verifico si el usuario es administrador o no
-const auth = (req, res, next) => {
+/* const auth = (req, res, next) => {
   if (req.session.login === true) {
     next(); // Continuar con la siguiente ejecución
   } else {
     res.redirect("/api/sessions/login");
   }
-};
+}; */
 
 app.set("views", path.resolve(__dirname, "./views")); //resuelve rutas absolutas a travez de rutas relativas
 app.use("/static", express.static(path.join(__dirname, "/public")));
@@ -106,6 +83,21 @@ app.use((req, res, next) => {
 
 //Routes
 app.use("/", router);
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.1.0",
+    info: {
+      title: "Documentacion Api Comic Store",
+      description: "Proyecto realizado para curso Backend de Coder House",
+    },
+  },
+  apis: [`${__dirname}/docs/**/*.yaml`], //**indica sub carpeta
+};
+
+const specs = swaggerJSDoc(swaggerOptions);
+
+app.use("/apidocs", swaggerUiExpress.serve, swaggerUiExpress.setup(specs));
 
 app.listen(PORT, () => {
   console.log(`Server on port ${PORT}`);
