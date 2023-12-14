@@ -1,4 +1,6 @@
 import { userModel } from "../models/users.models.js";
+import CustomError from "../services/errors/CustomError.js";
+import EError from "../services/errors/enum.js";
 import { generateUserError } from "../services/errors/info.js";
 import nodemailer from "nodemailer";
 

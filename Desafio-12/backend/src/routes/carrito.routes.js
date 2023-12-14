@@ -14,21 +14,19 @@ import {
 const cartsRouter = Router();
 
 cartsRouter.get("/", getCarrito);
+cartsRouter.post("/", postCarrito);/* esta */
 
 cartsRouter.get("/:cid", getCarritoById);
-
-cartsRouter.post("/", postCarrito);
-
-cartsRouter.post("/:cid/products/:pid", postCarritoByProductId);
+cartsRouter.put("/:cid", putCarrito);
 
 cartsRouter.delete("/:id", deleteById);
 
+cartsRouter.post("/:cid/products/:pid", postCarritoByProductId);
+cartsRouter.delete("/:cid/products/:pid", deleteProductById);
 cartsRouter.put("/:cid/products/:pid", putCarritoByProducId);
 
-cartsRouter.delete("/:cid/products/:pid", deleteProductById);
+cartsRouter.post("/:cid/purchase", postCompra);
 
-cartsRouter.put("/:cid", putCarrito);
 
-cartsRouter.post("/:cid/purchase", postCompra)
 
 export default cartsRouter;
